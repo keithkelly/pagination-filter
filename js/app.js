@@ -1,3 +1,4 @@
+// Set initial variables
 var studentsListContainer = document.querySelector('.student-list');
 var numberOfResultsToShow = 10;
 var studentsList = studentsListContainer.getElementsByClassName('student-item');
@@ -7,12 +8,12 @@ var totalListPages = Math.ceil(studentsList.length / numberOfResultsToShow);
 /** @function
  * Show a list of students based on a specified starting point.
  * Hides any students that fall outside of the start and end indexes.
- * @param {number} start The starting index point
+ * @param {number} startingIndex The starting index point
  */
 var showStudents = function(startingIndex) {
 	var endingIndex = startingIndex + numberOfResultsToShow - 1;
 
-	// Loop through items and hide items that should not be shown
+	// Loop through the students list and hide items that should not be shown
 	for(var i = 0; i < studentsList.length; i++) {	
 		// Initially remove any style elements if they were set		
 		studentsList[i].removeAttribute('style');					
@@ -21,6 +22,50 @@ var showStudents = function(startingIndex) {
 			studentsList[i].style.display = 'none';
 		}
 	}
+}
+
+/** @function
+ * Search student list and return any students whose name or email caontains search criteria.
+ */
+var searchStudents = function() {
+	var counter = studentsList.length;
+	var searchContainer = document.querySelector('.student-search');
+	var searchInput = searchContainer.querySelector('input');
+	var searchCriteria = searchInput.value.toLowerCase();
+
+	// Loop throught he students list and hide elements that do not contain the search criteria
+	for(var i = 0; i < studentsList.length; i++) {
+		var studentDetails = studentsList[i].querySelector('.student-details');
+		var studentName = studentDetails.querySelector('h3').innerText;
+		var studentEmail = studentDetails.querySelector('.email').innerText;
+		
+		// Initially remove any style elements if they were set and remove any previous messages
+		studentsList[i].removeAttribute('style');
+		removeSearchMessage();
+
+		// Check if the name or email contains the search criteria
+		// If it does not meet the criteria add the style of display: none and reduce the counter by 1
+		if(!studentName.includes(searchCriteria) || !studentEmail.includes(searchCriteria)) {
+			studentsList[i].style.display = 'none';
+			counter--;
+		}
+	}
+
+	// If no results are returned show a message
+	if(counter === 0) {
+		var messageContainer = document.createElement('div');
+		messageContainer.classList.add('search-message');
+		messageContainer.innerText = 'We\'re sorry, but your search didn\'t return any results.  You can try again or click one of the pagination buttons to go back to the full list.';
+		studentsListContainer.append(messageContainer);
+	}
+
+	// If search is blank show the first set of students
+	if(searchCriteria === '') {
+		showStudents(0);
+	}
+
+	// Clear search box
+	searchInput.value = '';
 }
 
 
@@ -32,6 +77,9 @@ var updateStudentList = function() {
 	var startingIndex = numberOfResultsToShow * pageNumber - numberOfResultsToShow;
 	var activeElements = document.getElementsByClassName('active');
 
+	// Remove the search message if it exists
+	removeSearchMessage();
+
 	// Remove active class from other pagination buttons
 	while(activeElements.length) {
 		activeElements[0].classList.remove('active');
@@ -40,6 +88,17 @@ var updateStudentList = function() {
 	this.classList.add('active');
 
 	showStudents(startingIndex);
+}
+
+
+/** @function
+ * Remove the empty search results message.
+ */
+var removeSearchMessage = function() {
+	var messageContainer = document.querySelector('.search-message');
+	if(messageContainer) {
+		studentsListContainer.removeChild(messageContainer);
+	}
 }
 
 
@@ -73,6 +132,7 @@ var addPaginationButtons = function() {
 	studentsListContainer.insertAdjacentElement('afterend', paginationContainer);
 }
 
+
 /** @function
  * Geneate search form.
  */
@@ -85,6 +145,7 @@ var addSearchForm = function() {
 	searchContainer.classList.add('student-search');
 	searchInput.setAttribute('placeholder', 'Search for students...');
 	searchButton.innerText = 'Search';
+	searchButton.onclick = searchStudents;
 
 	searchContainer.append(searchInput);
 	searchContainer.append(searchButton);
@@ -92,6 +153,7 @@ var addSearchForm = function() {
 	pageHeader.append(searchContainer);
 }
 
+// Initiate the program
 showStudents(0);
 addPaginationButtons();
 addSearchForm();
